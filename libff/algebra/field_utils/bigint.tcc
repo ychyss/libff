@@ -84,6 +84,27 @@ void bigint<n>::print_hex() const
 }
 
 template<mp_size_t n>
+std::string bigint<n>::to_string() const 
+{
+    mpz_t num;
+    mpz_init(num);
+    mpz_import(num, n, -1, sizeof(mp_limb_t), 0, 0, this->data);
+
+    // 计算所需的字符数组大小
+    size_t size = mpz_sizeinbase(num, 10) + 2; // +2 for the sign and null terminator
+    char* buffer = new char[size];
+
+    // 将num转换为十进制字符串
+    mpz_get_str(buffer, 10, num);
+
+    std::string result(buffer);
+    delete[] buffer;
+    mpz_clear(num);
+
+    return result;
+}
+
+template<mp_size_t n>
 bool bigint<n>::operator==(const bigint<n>& other) const
 {
     return (mpn_cmp(this->data, other.data, n) == 0);
@@ -251,6 +272,36 @@ std::istream& operator>>(std::istream &in, bigint<n> &b)
     delete[] s_copy;
 #endif
     return in;
+}
+
+template<mp_size_t n>
+bigint<n> bigint<n>::operator%(const bigint<n>& modulus) const {
+    mpz_t self_gmp;
+    mpz_t modulus_gmp;
+    mpz_t result_gmp;
+
+    // 初始化 GMP 变量
+    mpz_init(self_gmp);
+    mpz_init(modulus_gmp);
+    mpz_init(result_gmp);
+
+    // 将 bigint 数据转换为 GMP 变量
+    this->to_mpz(self_gmp);
+    modulus.to_mpz(modulus_gmp);
+
+    // 执行取模运算
+    mpz_mod(result_gmp, self_gmp, modulus_gmp);
+
+    // 将结果转换回 bigint
+    bigint<n> result;
+    mpz_export(result.data, nullptr, -1, sizeof(mp_limb_t), 0, 0, result_gmp);
+
+    // 清理 GMP 变量
+    mpz_clear(self_gmp);
+    mpz_clear(modulus_gmp);
+    mpz_clear(result_gmp);
+
+    return result;
 }
 
 } // namespace libff

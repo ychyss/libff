@@ -64,6 +64,9 @@ public:
 
     friend std::ostream& operator<< <n>(std::ostream &out, const bigint<n> &b);
     friend std::istream& operator>> <n>(std::istream &in, bigint<n> &b);
+    
+    bigint<n> operator%(const bigint<n>& modulus) const; // 重载取模操作
+    std::string to_string() const; // 转为字符串，方便进行重新初始化
 };
 
 } // namespace libff
